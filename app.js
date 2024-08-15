@@ -1,19 +1,28 @@
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const contactsRouter = require('./api/contacts');
+const mongoose = require('mongoose');
 
+const contactsRouter = require('./api/contacts');
 const app = express();
 
-app.use(morgan('dev'));
-app.use(cors());
+const connectionString = 'mongodb+srv://al3x99:al3x99@clusterforhomework.jur6f2d.mongodb.net/?retryWrites=true&w=majority&appName=ClusterForHomework';
+mongoose.connect(connectionString, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}) 
+.then( () => console.log('Database connection successful'))
+.catch(err => {
+  console.log(err)
+  process.exit(1);
+});
+
+
+app.use(express.urlencoded ({ extended: false }));
 app.use(express.json());
 
 app.use('/api/contacts', contactsRouter);
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send({ message: 'Internal Server Error' });
+app.get("/", async (req, res) => {
+  res.json({ status: 200 });
 });
 
 const PORT = process.env.PORT || 3000;

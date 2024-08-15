@@ -1,56 +1,46 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-
-const contactsPath = path.join(__dirname, '../models/contacts.json');
+const Contact = require("../models/moongoseItemSchema");
 
 const listContacts = async () => {
-  const data = await fs.readFile(contactsPath, 'utf-8');
-  return JSON.parse(data);
+  return await Contact.find();
 };
 
 const getById = async (id) => {
-  const contacts = await listContacts();
-  return contacts.find ( contact => contact === contact.id);
+  return await Contact.findById(id);
 };
 
 const addContact = async (contact) => {
-    const contacts = await listContacts();
-    const newContact = {
-      id: uuidv4(), 
-      ...contact
-    };
-    contacts.push(newContact)
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return newContact;
+  const newContact = new Contact(contact);
+  return await newContact.save();
 };
 
-const updateContact = async (id, updatedInfo) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(contact => contact.id === id);
-  if (index !== -1) {
-    contacts[index] = { ...contacts[index], ...updatedInfo };
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return contacts[index];
+const getByFavorite = async () => {
+    return await Contact.find( {favorite: true });
   }
-  return null;
+
+const updateContact = async (id, updatedInfo) => {
+  return await Contact.findByIdAndUpdate(id, updatedInfo, { new: true });
 };
 
 const removeContact = async (id) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(contact => contact.id === id);
-  if (index !== -1) {
-    const [deletedContact] = contacts.splice(index, 1);
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return deletedContact;
-  }
-  return null;
+  return await Contact.findByIdAndDelete(id);
 };
+
+const updateStatusContact = async (contactId, { favorite }) => {
+  const updatedContact = await Contact.findByIdAndUpdate(
+    contactId,
+    { favorite: favorite },
+    { new: true }
+  );
+  return updatedContact;
+};
+
 
 module.exports = {
   listContacts,
   getById,
   addContact,
   updateContact,
-  removeContact
+  removeContact,
+  updateStatusContact,
+  getByFavorite,
 };
